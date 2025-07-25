@@ -1,26 +1,43 @@
 package lanit_exp.proxy_hub.controllers;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lanit_exp.proxy_hub.responses.ValueResponseEntity;
 import lanit_exp.proxy_hub.services.MainProxyService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
 
 @RestController
 @RequestMapping("/")
+@RequiredArgsConstructor
 public class ProxyController {
 
     private final MainProxyService mainProxyService;
 
-    public ProxyController(MainProxyService mainProxyService) {
-        this.mainProxyService = mainProxyService;
+
+    @RequestMapping(value = {"/proxy/id/{id}/**"})
+    public ResponseEntity<?> proxyIdRequest(@PathVariable("id") String id, HttpServletRequest request) {
+        return mainProxyService.idRequestHandler(id, request);
     }
 
-    @RequestMapping(value = {"/**"},
-            method = {RequestMethod.POST, RequestMethod.GET, RequestMethod.DELETE})
-    public ResponseEntity<?> proxyRequest(HttpServletRequest request) {
-        return mainProxyService.requestHandler(request);
+    @RequestMapping(value = {"/proxy/tag/{tag}/**"})
+    public ResponseEntity<?> proxyTagRequest(@PathVariable("tag") String tag, HttpServletRequest request) {
+        return mainProxyService.tagRequestHandler(tag, request);
     }
+
+
+
+    //------------------------------------------------------------------------------------------------------------------
+
+    @RequestMapping(value = {"/**"})
+    public ResponseEntity<?> proxyRequest(HttpServletRequest request) {
+        String mes = "Поддерживаются только эндпоинты вида '/proxy/id/{id}/...' и '/proxy/tag/{tag}/...'";
+        return new ValueResponseEntity(mes)
+                .getEntity(400);
+    }
+
 
 }
