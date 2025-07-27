@@ -6,19 +6,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 public class NodeCommunicationService {
 
     private final SimpMessagingTemplate messagingTemplate;
+    private final NodeMessageHolder nodeMessageHolder;
 
     public ResponseEntity<?> sendMessage(String sessionId, HttpServletRequest request) {
 
@@ -29,9 +28,8 @@ public class NodeCommunicationService {
         messagingTemplate.convertAndSend("/queue/to/" + sessionId, request.getRequestURI(), headers);
 
         try {
-//            String response = future.get(50, TimeUnit.SECONDS);
-
-            return new ValueResponseEntity("").getEntity(HttpStatus.OK);
+            String response = nodeMessageHolder.awaitMessage(requestId);
+            return new ValueResponseEntity(response).getEntity(HttpStatus.OK);
 
         } catch (Exception e) {
             return new ValueResponseEntity("[ NODE RESPONSE TIMEOUT ] Не получен ответ от драйвера (Proxy Node)")

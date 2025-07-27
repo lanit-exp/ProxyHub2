@@ -6,30 +6,44 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
 
 @Service
 @Slf4j
 public class NodeMessageHolder {
 
-    private final ConcurrentHashMap<String, NodeMessage> MESSAGES = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, NodeMessage> MESSAGES = new ConcurrentHashMap<>();
 
     @Value("${node.message.live_timeout}")
     private Integer messageLiveTimeout;
+
+    @Value("${node.message.await_timeout}")
+    private Integer messageAwaitTimeout;
 
     public void addMessage(String requestId, String message) {
         MESSAGES.put(requestId, new NodeMessage(message));
     }
 
-    public NodeMessage getMessage(String requestId) {
-        return MESSAGES.contains(requestId) ? MESSAGES.remove(requestId) : null;
+    public String awaitMessage(String requestId) throws TimeoutException, InterruptedException {
+        long end = new Date().getTime() + messageAwaitTimeout * 1000;
+
+        while (new Date().getTime() < end) {
+            if (MESSAGES.containsKey(requestId))
+                return MESSAGES.remove(requestId).getMessage();
+
+            Thread.sleep(100);
+        }
+
+        throw new TimeoutException();
     }
 
 
     @Scheduled(fixedDelay = 300_000)
-    private void clearOldMessages(){
+    private void clearOldMessages() {
         log.info("Очистка очереди сообщений");
 
         try {
