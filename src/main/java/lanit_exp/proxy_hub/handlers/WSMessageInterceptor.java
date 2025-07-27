@@ -1,6 +1,7 @@
 package lanit_exp.proxy_hub.handlers;
 
 import lanit_exp.proxy_hub.exceptions.IncorrectNodeIdException;
+import lanit_exp.proxy_hub.exceptions.IncorrectNodeSessionException;
 import lanit_exp.proxy_hub.services.WSNodes;
 import lanit_exp.proxy_hub.services.WSSessions;
 import lombok.RequiredArgsConstructor;
@@ -59,7 +60,7 @@ public class WSMessageInterceptor implements ChannelInterceptor {
 
     private void registerWSNode(StompHeaderAccessor accessor) {
         log.info("Нода подключена: {}", accessor.getSessionId());
-        wsNodes.registerNode(accessor.getSessionId(), getNodeId(accessor), getNodeTags(accessor));
+        wsNodes.registerNode(accessor.getSessionId(), getNodeId(accessor), getNodeTags(accessor), getNodeSession(accessor));
     }
 
     private void deleteWSNode(StompHeaderAccessor accessor) {
@@ -99,6 +100,22 @@ public class WSMessageInterceptor implements ChannelInterceptor {
                 .map(String::trim)
                 .filter(string -> !string.isEmpty())
                 .collect(Collectors.toList());
+    }
+
+
+    private String getNodeSession(StompHeaderAccessor accessor) {
+        try {
+            List<?> nodeSessions = (List) ((MultiValueMap) accessor.getHeader("nativeHeaders"))
+                    .get("node_session");
+
+            if (nodeSessions == null || nodeSessions.isEmpty())
+                throw new IncorrectNodeSessionException();
+
+            return (String) nodeSessions.get(0);
+
+        } catch (Exception e) {
+            throw new IncorrectNodeSessionException();
+        }
     }
 
 }

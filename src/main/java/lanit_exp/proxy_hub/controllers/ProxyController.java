@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lanit_exp.proxy_hub.responses.ValueResponseEntity;
 import lanit_exp.proxy_hub.services.MainProxyService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,9 +35,9 @@ public class ProxyController {
 
     @RequestMapping(value = {"/**"})
     public ResponseEntity<?> proxyRequest(HttpServletRequest request) {
-        String mes = "Поддерживаются только эндпоинты вида '/proxy/id/{id}/...' и '/proxy/tag/{tag}/...'";
+        String mes = "Поддерживаются только запросы вида '/proxy/id/{id}/...' и '/proxy/tag/{tag}/...'";
         return new ValueResponseEntity(mes)
-                .getEntity(400);
+                .getEntity(HttpStatus.BAD_REQUEST);
     }
 
 

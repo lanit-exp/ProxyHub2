@@ -12,8 +12,8 @@ public class WSNodes {
 
     private final Map<String, Node> NODES = new ConcurrentHashMap<>();
 
-    public void registerNode(String sessionId, String nodeId, List<String> tags) {
-        NODES.put(sessionId, new Node(nodeId, tags));
+    public void registerNode(String sessionId, String nodeId, List<String> tags, String nodeSession) {
+        NODES.put(sessionId, new Node(nodeId, tags, nodeSession));
     }
 
     public void deleteNode(String sessionId) {
@@ -22,6 +22,13 @@ public class WSNodes {
 
     public void updateNode(String sessionId) {
         NODES.get(sessionId).updateLastActivity();
+    }
+
+    public String getNodeSessionByNodeId(String nodeId) {
+        return NODES.entrySet().stream()
+                .filter(stringNodeEntry -> stringNodeEntry.getValue().getId().equals(nodeId))
+                .map(stringNodeEntry -> stringNodeEntry.getValue().getNodeSession())
+                .findFirst().orElse(null);
     }
 
 }
