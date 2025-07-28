@@ -1,6 +1,7 @@
 package lanit_exp.proxy_hub.services;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lanit_exp.proxy_hub.models.ApiRequest;
 import lanit_exp.proxy_hub.responses.ValueResponseEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,17 +20,20 @@ public class NodeCommunicationService {
     private final SimpMessagingTemplate messagingTemplate;
     private final NodeMessageHolder nodeMessageHolder;
 
-    public ResponseEntity<?> sendMessage(String sessionId, HttpServletRequest request) {
+    public ResponseEntity<?> sendMessage(String nodeSession, HttpServletRequest request) {
 
         String requestId = UUID.randomUUID().toString();
         Map<String, Object> headers = new HashMap<>();
         headers.put("request_id", requestId);
 
-        messagingTemplate.convertAndSend("/queue/to/" + sessionId, request.getRequestURI(), headers);
+        ApiRequest apiRequest = ApiConverter.requestToDTO(request);
+
+        messagingTemplate.convertAndSend("/queue/to/" + nodeSession, apiRequest, headers);
 
         try {
-            String response = nodeMessageHolder.awaitMessage(requestId);
-            return new ValueResponseEntity(response).getEntity(HttpStatus.OK);
+
+            String responseString = nodeMessageHolder.awaitMessage(requestId);
+            return ApiConverter.responseToEntity(responseString);
 
         } catch (Exception e) {
             return new ValueResponseEntity("[ NODE RESPONSE TIMEOUT ] Не получен ответ от драйвера (Proxy Node)")

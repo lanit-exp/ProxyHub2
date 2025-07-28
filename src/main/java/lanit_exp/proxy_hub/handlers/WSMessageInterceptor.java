@@ -14,7 +14,6 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.socket.CloseStatus;
-import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,21 +35,22 @@ public class WSMessageInterceptor implements ChannelInterceptor {
 
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
             try {
+
                 registerWSNode(accessor);
+
             } catch (Exception e) {
                 log.error("Ошибка регистрации ноды: {}", e.getMessage());
 
-                WebSocketSession session = wsSessions.getSession(accessor.getSessionId());
-
                 try {
-                    session.close(CloseStatus.SERVER_ERROR.withReason("Session closed by server: " + e.getMessage()));
+                    wsSessions.getSession(accessor.getSessionId())
+                            .close(CloseStatus.SERVER_ERROR.withReason("Session closed by server: " + e.getMessage()));
                 } catch (IOException ex) {
                     log.error("Ошибка закрытия сессии: {}", ex.getMessage());
                 }
             }
         } else if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {
             deleteWSNode(accessor);
-        } else if (StompCommand.MESSAGE.equals(accessor.getCommand())){
+        } else if (StompCommand.MESSAGE.equals(accessor.getCommand())) {
             updateWSNodeActivity(accessor);
         }
 

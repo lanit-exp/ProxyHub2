@@ -16,13 +16,13 @@ public class MainProxyService {
 
     public ResponseEntity<?> idRequestHandler(String id, HttpServletRequest request) {
 
-        String sessionId = nodes.getNodeSessionByNodeId(id);
+        String nodeSession = nodes.getNodeSessionByNodeId(id);
 
-        if (sessionId == null)
+        if (nodeSession == null)
             return new ValueResponseEntity("Нода с id: '%s' не найдена. Проверьте подключение ноды или перезапустите её.".formatted(id))
                     .getEntity(HttpStatus.NOT_FOUND);
 
-        return nodeCommunicationService.sendMessage(sessionId, request);
+        return nodeCommunicationService.sendMessage(nodeSession, request);
     }
 
     public ResponseEntity<?> tagRequestHandler(String tag, HttpServletRequest request) {
