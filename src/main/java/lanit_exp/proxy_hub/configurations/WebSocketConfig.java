@@ -4,6 +4,8 @@ import lanit_exp.proxy_hub.handlers.WSMessageInterceptor;
 import lanit_exp.proxy_hub.handlers.WSSessionHandler;
 import lanit_exp.proxy_hub.services.WSSessions;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -11,6 +13,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
+import org.springframework.web.socket.server.standard.ServletServerContainerFactoryBean;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -19,6 +22,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final WSMessageInterceptor wsMessageInterceptor;
     private final WSSessions wsSessions;
+
+    @Value("${ws.message.size_limit}")
+    private Integer messageSizeLimit;
+    @Value("${ws.message.send_time_limit}")
+    private Integer messageSendTimeLimit;
+
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
@@ -42,5 +51,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureWebSocketTransport(WebSocketTransportRegistration registry) {
         registry.addDecoratorFactory(handler -> new WSSessionHandler(handler, wsSessions));
+        registry.setMessageSizeLimit(messageSizeLimit);
+        registry.setSendBufferSizeLimit(messageSizeLimit);
+        registry.setSendTimeLimit(messageSendTimeLimit);
+    }
+
+    @Bean
+    public ServletServerContainerFactoryBean createServletServerContainerFactoryBean() {
+        ServletServerContainerFactoryBean container = new ServletServerContainerFactoryBean();
+        container.setMaxTextMessageBufferSize(messageSizeLimit);
+        return container;
     }
 }

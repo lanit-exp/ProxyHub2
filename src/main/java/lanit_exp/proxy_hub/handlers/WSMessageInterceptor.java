@@ -59,13 +59,13 @@ public class WSMessageInterceptor implements ChannelInterceptor {
 
 
     private void registerWSNode(StompHeaderAccessor accessor) {
-        log.info("Нода подключена: {}", accessor.getSessionId());
         wsNodes.registerNode(accessor.getSessionId(), getNodeId(accessor), getNodeTags(accessor), getNodeSession(accessor));
+        log.info("Нода подключена: {}. Активных соединений: {}", accessor.getSessionId(), wsNodes.numberOfConnectedNodes());
     }
 
     private void deleteWSNode(StompHeaderAccessor accessor) {
-        log.info("Нода отключена: {}", accessor.getSessionId());
         wsNodes.deleteNode(accessor.getSessionId());
+        log.info("Нода отключена: {}. Активных соединений: {}", accessor.getSessionId(), wsNodes.numberOfConnectedNodes());
     }
 
     private void updateWSNodeActivity(StompHeaderAccessor accessor) {

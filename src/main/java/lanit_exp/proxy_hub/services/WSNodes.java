@@ -31,4 +31,8 @@ public class WSNodes {
                 .findFirst().orElse(null);
     }
 
+    public Integer numberOfConnectedNodes(){
+        return NODES.size();
+    }
+
 }

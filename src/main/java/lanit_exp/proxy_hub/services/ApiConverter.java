@@ -81,7 +81,7 @@ public class ApiConverter {
     }
 
     private static String normalizeUri(String uri) {
-        return uri.replaceAll("^/proxy/(id|tag)/[a-zA-Z0-9-]+", "");
+        return uri.replaceAll("^/proxy/(id|tag)/[a-zA-Z0-9-_]+", "");
     }
 
 }
