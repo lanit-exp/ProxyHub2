@@ -31,8 +31,13 @@ public class WSNodes {
                 .findFirst().orElse(null);
     }
 
-    public Integer numberOfConnectedNodes(){
+    public Integer numberOfConnectedNodes() {
         return NODES.size();
     }
+
+    public String getNodeSessionBySessionId(String sessionId) {
+        return NODES.get(sessionId).getNodeSession();
+    }
+
 
 }

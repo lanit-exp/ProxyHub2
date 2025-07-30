@@ -1,5 +1,6 @@
 package lanit_exp.proxy_hub.handlers;
 
+import lanit_exp.proxy_hub.exceptions.IncorrectDestinationException;
 import lanit_exp.proxy_hub.exceptions.IncorrectNodeIdException;
 import lanit_exp.proxy_hub.exceptions.IncorrectNodeSessionException;
 import lanit_exp.proxy_hub.services.WSNodes;
@@ -19,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Component
@@ -34,23 +36,23 @@ public class WSMessageInterceptor implements ChannelInterceptor {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
 
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+
             try {
-
                 registerWSNode(accessor);
-
             } catch (Exception e) {
                 log.error("Ошибка регистрации ноды: {}", e.getMessage());
+                closeCurrentWSSession(accessor, e);
+            }
 
-                try {
-                    wsSessions.getSession(accessor.getSessionId())
-                            .close(CloseStatus.SERVER_ERROR.withReason("Session closed by server: " + e.getMessage()));
-                } catch (IOException ex) {
-                    log.error("Ошибка закрытия сессии: {}", ex.getMessage());
-                }
+        } else if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
+            try {
+                checkSubscribe(accessor);
+            } catch (Exception e) {
+                closeCurrentWSSession(accessor, e);
             }
         } else if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {
             deleteWSNode(accessor);
-        } else if (StompCommand.MESSAGE.equals(accessor.getCommand())) {
+        } else if (StompCommand.SEND.equals(accessor.getCommand())) {
             updateWSNodeActivity(accessor);
         }
 
@@ -63,6 +65,17 @@ public class WSMessageInterceptor implements ChannelInterceptor {
         log.info("Нода подключена: {}. Активных соединений: {}", accessor.getSessionId(), wsNodes.numberOfConnectedNodes());
     }
 
+    private void checkSubscribe(StompHeaderAccessor accessor) {
+        String destination = accessor.getDestination();
+        String expectedDestination = "/queue/to2/" + wsNodes.getNodeSessionBySessionId(accessor.getSessionId());
+        if (!Objects.equals(destination, expectedDestination)) {
+            String error = "Некорректный параметр destination(имя топика): '%s' для подписки.".formatted(destination);
+            log.error(error);
+            throw new IncorrectDestinationException(error);
+        }
+
+    }
+
     private void deleteWSNode(StompHeaderAccessor accessor) {
         wsNodes.deleteNode(accessor.getSessionId());
         log.info("Нода отключена: {}. Активных соединений: {}", accessor.getSessionId(), wsNodes.numberOfConnectedNodes());
@@ -73,6 +86,17 @@ public class WSMessageInterceptor implements ChannelInterceptor {
         wsNodes.updateNode(accessor.getSessionId());
     }
 
+
+    private void closeCurrentWSSession(StompHeaderAccessor accessor, Exception e){
+        try {
+            wsSessions.getSession(accessor.getSessionId())
+                    .close(CloseStatus.SERVER_ERROR.withReason("Session closed by server: " + e.getMessage()));
+        } catch (IOException ex) {
+            log.error("Ошибка закрытия сессии: {}", ex.getMessage());
+        }
+    }
+
+    //------------------------------------------------------------------------------------------------------------------
 
     private String getNodeId(StompHeaderAccessor accessor) {
         try {
