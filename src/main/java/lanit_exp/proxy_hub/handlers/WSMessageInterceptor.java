@@ -67,7 +67,7 @@ public class WSMessageInterceptor implements ChannelInterceptor {
 
     private void checkSubscribe(StompHeaderAccessor accessor) {
         String destination = accessor.getDestination();
-        String expectedDestination = "/queue/to2/" + wsNodes.getNodeSessionBySessionId(accessor.getSessionId());
+        String expectedDestination = "/queue/to/" + wsNodes.getNodeSessionBySessionId(accessor.getSessionId());
         if (!Objects.equals(destination, expectedDestination)) {
             String error = "Некорректный параметр destination(имя топика): '%s' для подписки.".formatted(destination);
             log.error(error);
