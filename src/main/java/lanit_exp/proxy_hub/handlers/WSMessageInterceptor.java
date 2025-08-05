@@ -2,16 +2,17 @@ package lanit_exp.proxy_hub.handlers;
 
 import lanit_exp.proxy_hub.exceptions.IncorrectDestinationException;
 import lanit_exp.proxy_hub.exceptions.IncorrectNodeIdException;
-import lanit_exp.proxy_hub.exceptions.IncorrectNodeSessionException;
 import lanit_exp.proxy_hub.services.WSNodes;
 import lanit_exp.proxy_hub.services.WSSessions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.socket.CloseStatus;
@@ -54,6 +55,11 @@ public class WSMessageInterceptor implements ChannelInterceptor {
             deleteWSNode(accessor);
         } else if (StompCommand.SEND.equals(accessor.getCommand())) {
             updateWSNodeActivity(accessor);
+        } else if(SimpMessageType.CONNECT_ACK.equals(accessor.getHeader("simpMessageType"))) {
+            StompHeaderAccessor newAccessor = StompHeaderAccessor.create(StompCommand.CONNECTED);
+            newAccessor.copyHeaders(accessor.toMap());
+            newAccessor.addNativeHeader("node_session", accessor.getSessionId());
+            return MessageBuilder.createMessage(message.getPayload(), newAccessor.getMessageHeaders());
         }
 
         return message;
@@ -61,13 +67,13 @@ public class WSMessageInterceptor implements ChannelInterceptor {
 
 
     private void registerWSNode(StompHeaderAccessor accessor) {
-        wsNodes.registerNode(accessor.getSessionId(), getNodeId(accessor), getNodeTags(accessor), getNodeSession(accessor));
+        wsNodes.registerNode(accessor.getSessionId(), getNodeId(accessor), getNodeTags(accessor));
         log.info("Нода подключена: {}. Активных соединений: {}", accessor.getSessionId(), wsNodes.numberOfConnectedNodes());
     }
 
     private void checkSubscribe(StompHeaderAccessor accessor) {
         String destination = accessor.getDestination();
-        String expectedDestination = "/queue/to/" + wsNodes.getNodeSessionBySessionId(accessor.getSessionId());
+        String expectedDestination = "/queue/to/" + accessor.getSessionId();
         if (!Objects.equals(destination, expectedDestination)) {
             String error = "Некорректный параметр destination(имя топика): '%s' для подписки.".formatted(destination);
             log.error(error);
@@ -126,20 +132,5 @@ public class WSMessageInterceptor implements ChannelInterceptor {
                 .collect(Collectors.toList());
     }
 
-
-    private String getNodeSession(StompHeaderAccessor accessor) {
-        try {
-            List<?> nodeSessions = (List) ((MultiValueMap) accessor.getHeader("nativeHeaders"))
-                    .get("node_session");
-
-            if (nodeSessions == null || nodeSessions.isEmpty())
-                throw new IncorrectNodeSessionException();
-
-            return (String) nodeSessions.get(0);
-
-        } catch (Exception e) {
-            throw new IncorrectNodeSessionException();
-        }
-    }
 
 }

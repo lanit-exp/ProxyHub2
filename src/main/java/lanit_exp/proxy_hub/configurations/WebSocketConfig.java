@@ -49,6 +49,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 
     @Override
+    public void configureClientOutboundChannel(ChannelRegistration registration) {
+        registration.interceptors(wsMessageInterceptor);
+    }
+
+    @Override
     public void configureWebSocketTransport(WebSocketTransportRegistration registry) {
         registry.addDecoratorFactory(handler -> new WSSessionHandler(handler, wsSessions));
         registry.setMessageSizeLimit(messageSizeLimit);
