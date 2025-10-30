@@ -18,10 +18,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.socket.CloseStatus;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -89,7 +86,7 @@ public class WSMessageInterceptor implements ChannelInterceptor {
 
     private void updateWSNodeActivity(StompHeaderAccessor accessor) {
         log.info("Обновлено время активности ноды: {}", accessor.getSessionId());
-        wsNodes.updateNode(accessor.getSessionId());
+        wsNodes.updateLastActivity(accessor.getSessionId());
     }
 
 
@@ -119,17 +116,17 @@ public class WSMessageInterceptor implements ChannelInterceptor {
         }
     }
 
-    private List<String> getNodeTags(StompHeaderAccessor accessor) {
+    private Set<String> getNodeTags(StompHeaderAccessor accessor) {
 
         List<?> tagsList = (List) ((MultiValueMap) accessor.getHeader("nativeHeaders"))
                 .get("node_tags");
 
-        if (tagsList == null || tagsList.isEmpty()) return new ArrayList<>();
+        if (tagsList == null || tagsList.isEmpty()) return new HashSet<>();
 
         return Arrays.stream(((String) tagsList.get(0)).split(","))
                 .map(String::trim)
                 .filter(string -> !string.isEmpty())
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
 
