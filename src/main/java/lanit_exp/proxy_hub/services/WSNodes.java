@@ -24,6 +24,10 @@ public class WSNodes {
         return NODES.get(sessionId);
     }
 
+    public List<Map<String, Object>> getNodeStatuses(){
+        return NODES.values().stream().map(node -> node.getStatus(idleTimeout)).toList();
+    }
+
     public void deleteNode(String sessionId) {
         NODES.remove(sessionId);
     }

@@ -2,6 +2,7 @@ package lanit_exp.proxy_hub.controllers;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lanit_exp.proxy_hub.responses.ValueResponseEntity;
+import lanit_exp.proxy_hub.services.InnerProxyHubService;
 import lanit_exp.proxy_hub.services.MainProxyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ProxyController {
 
     private final MainProxyService mainProxyService;
+    private final InnerProxyHubService innerProxyHubService;
 
 
     @RequestMapping(value = {"/proxy/id/{id}/**"})
@@ -52,6 +54,13 @@ public class ProxyController {
                 .getEntity(HttpStatus.BAD_REQUEST);
     }
 
+
+    //------------------------------------------------------------------------------------------------------------------
+
+    @RequestMapping(value = {"/proxy/status"}, method = RequestMethod.GET)
+    public ResponseEntity<?> proxyHubStatus(HttpServletRequest request) {
+        return innerProxyHubService.getProxyHubStatus(request);
+    }
 
     //------------------------------------------------------------------------------------------------------------------
 
