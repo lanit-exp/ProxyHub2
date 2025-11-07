@@ -1,7 +1,7 @@
 package lanit_exp.proxy_hub.services;
 
+import lanit_exp.proxy_hub.configurations.ProxyConfig;
 import lanit_exp.proxy_hub.models.Node;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -13,19 +13,23 @@ public class WSNodes {
 
     private final Map<String, Node> NODES = new ConcurrentHashMap<>();
 
-    @Value("${node.session.idle_timeout}")
-    private Integer idleTimeout;
 
     public void registerNode(String sessionId, String nodeId, Set<String> tags) {
-        NODES.put(sessionId, new Node(nodeId, tags));
+        Node n = new Node(nodeId, tags);
+
+        // todo
+//        if (NODES.containsValue(n))
+//            throw new RuntimeException("Нода с id: '%s' уже зарегистрирована. Используйте другой node_id.".formatted(nodeId));
+
+        NODES.put(sessionId, n);
     }
 
-    public Node getNode(String sessionId){
+    public Node getNode(String sessionId) {
         return NODES.get(sessionId);
     }
 
-    public List<Map<String, Object>> getNodeStatuses(){
-        return NODES.values().stream().map(node -> node.getStatus(idleTimeout)).toList();
+    public List<Map<String, Object>> getNodeStatuses() {
+        return NODES.values().stream().map(Node::getStatus).toList();
     }
 
     public void deleteNode(String sessionId) {
@@ -46,7 +50,7 @@ public class WSNodes {
             throw new IllegalArgumentException("Отсутствуют теги для фильтрации нод.");
 
         return getNodeSession(stringNodeEntry ->
-                stringNodeEntry.getValue().isFreeNode(idleTimeout) && stringNodeEntry.getValue().getTags().containsAll(tags));
+                stringNodeEntry.getValue().isFreeNode() && stringNodeEntry.getValue().getTags().containsAll(tags));
 
     }
 
@@ -65,6 +69,7 @@ public class WSNodes {
     private String getNodeSession(Predicate<? super Map.Entry<String, Node>> filter) {
         return NODES.entrySet().stream()
                 .filter(filter)
+                .sorted(Comparator.comparing(o -> o.getValue().getLastActivity()))
                 .map(Map.Entry::getKey)
                 .findFirst()
                 .orElse(null);

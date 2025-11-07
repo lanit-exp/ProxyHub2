@@ -1,5 +1,6 @@
 package lanit_exp.proxy_hub.models;
 
+import lanit_exp.proxy_hub.configurations.ProxyConfig;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,6 +9,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 @Getter
@@ -32,21 +34,33 @@ public class Node {
         lastActivity = LocalDateTime.now();
     }
 
-    public boolean isFreeNode(int idleTimeoutSec){
-      return driverSessionId == null || ChronoUnit.SECONDS.between(lastActivity, LocalDateTime.now()) > idleTimeoutSec;
+    public boolean isFreeNode(){
+      return driverSessionId == null
+              || ChronoUnit.SECONDS.between(lastActivity, LocalDateTime.now()) > ProxyConfig.getProxyConfig().getIdleTimeout();
     }
 
-    public Map<String, Object> getStatus(int idleTimeoutSec){
+    public Map<String, Object> getStatus(){
 
         Map<String, Object> result = new HashMap<>();
         result.put("id", "*".repeat((id.length()+1)/2) + id.substring((id.length()+1)/2));
         result.put("tags", tags);
         result.put("driverSessionId", driverSessionId);
-        result.put("isFree", isFreeNode(idleTimeoutSec));
+        result.put("isFree", isFreeNode());
         result.put("lastActivity", lastActivity.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
 
         return result;
     }
 
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (object == null || getClass() != object.getClass()) return false;
+        Node node = (Node) object;
+        return Objects.equals(id, node.id);
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

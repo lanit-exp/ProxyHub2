@@ -59,7 +59,12 @@ public class ProxyController {
 
     @RequestMapping(value = {"/proxy/status"}, method = RequestMethod.GET)
     public ResponseEntity<?> proxyHubStatus(HttpServletRequest request) {
-        return innerProxyHubService.getProxyHubStatus(request);
+        return innerProxyHubService.getProxyHubStatus();
+    }
+
+    @RequestMapping(value = {"/proxy/idle/{idle}"}, method = RequestMethod.GET)
+    public ResponseEntity<?> proxyHubStatus(@PathVariable("idle") String idle, HttpServletRequest request) {
+        return innerProxyHubService.setIdleTimeout(idle);
     }
 
     //------------------------------------------------------------------------------------------------------------------
