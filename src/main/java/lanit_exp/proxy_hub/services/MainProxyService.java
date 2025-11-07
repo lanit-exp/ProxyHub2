@@ -2,6 +2,7 @@ package lanit_exp.proxy_hub.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
+import lanit_exp.proxy_hub.models.Node;
 import lanit_exp.proxy_hub.responses.ValueResponseEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,8 +56,12 @@ public class MainProxyService {
 
         String driverSession = getDriverSession(responseEntity);
 
-        nodes.getNode(nodeSession).setDriverSessionId(driverSession);
-        log.info("Driver SESSION '{}' - CREATE", driverSession);
+        if (driverSession != null){
+            nodes.getNode(nodeSession).setDriverSessionId(driverSession);
+            log.info("Driver SESSION '{}' - CREATE", driverSession);
+        } else {
+            nodes.getNode(nodeSession).setBusy(false);
+        }
 
         return responseEntity;
     }
@@ -71,7 +76,10 @@ public class MainProxyService {
 
         ResponseEntity<?> responseEntity = nodeCommunicationService.sendMessage(nodeSession, request);
 
-        nodes.getNode(nodeSession).setDriverSessionId(null);
+        Node node = nodes.getNode(nodeSession);
+        node.setDriverSessionId(null);
+        node.setBusy(false);
+
         log.info("Driver SESSION '{}' - CLOSE", sessionId);
 
         return responseEntity;

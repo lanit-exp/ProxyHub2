@@ -1,6 +1,5 @@
 package lanit_exp.proxy_hub.services;
 
-import lanit_exp.proxy_hub.configurations.ProxyConfig;
 import lanit_exp.proxy_hub.models.Node;
 import org.springframework.stereotype.Component;
 
@@ -49,9 +48,15 @@ public class WSNodes {
         if (tags == null || tags.isEmpty())
             throw new IllegalArgumentException("Отсутствуют теги для фильтрации нод.");
 
-        return getNodeSession(stringNodeEntry ->
-                stringNodeEntry.getValue().isFreeNode() && stringNodeEntry.getValue().getTags().containsAll(tags));
+        synchronized (NODES) {
+            String nodeSession = getNodeSession(stringNodeEntry ->
+                    stringNodeEntry.getValue().isFreeNode() && stringNodeEntry.getValue().getTags().containsAll(tags));
 
+            if (nodeSession != null)
+                NODES.get(nodeSession).setBusy(true);
+
+            return nodeSession;
+        }
     }
 
     public String getNodeByDriverSessionId(String driverSessionId) {

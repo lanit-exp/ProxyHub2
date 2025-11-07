@@ -24,6 +24,10 @@ public class Node {
 
     private LocalDateTime lastActivity;
 
+    @Setter
+    private boolean busy;
+
+
     public Node(String id, Set<String> tags) {
         this.id = id;
         this.tags = tags;
@@ -35,8 +39,7 @@ public class Node {
     }
 
     public boolean isFreeNode(){
-      return driverSessionId == null
-              || ChronoUnit.SECONDS.between(lastActivity, LocalDateTime.now()) > ProxyConfig.getProxyConfig().getIdleTimeout();
+      return !busy || ChronoUnit.SECONDS.between(lastActivity, LocalDateTime.now()) > ProxyConfig.getProxyConfig().getIdleTimeout();
     }
 
     public Map<String, Object> getStatus(){
