@@ -24,7 +24,7 @@ public class Node {
 
     private LocalDateTime lastActivity;
 
-    private boolean busy;
+    private boolean receivingASession;
 
 
     public Node(String id, Set<String> tags) {
@@ -37,18 +37,19 @@ public class Node {
         lastActivity = LocalDateTime.now();
     }
 
-    public synchronized boolean isFreeNode(){
-      return !busy || ChronoUnit.SECONDS.between(lastActivity, LocalDateTime.now()) > ProxyConfig.getProxyConfig().getIdleTimeout();
+    public synchronized boolean isFreeNode() {
+        return !receivingASession &&
+                (driverSessionId == null || ChronoUnit.SECONDS.between(lastActivity, LocalDateTime.now()) > ProxyConfig.getProxyConfig().getIdleTimeout());
     }
 
-    public synchronized void setBusy(boolean busy) {
-        this.busy = busy;
+    public synchronized void setReceivingASession(boolean busy) {
+        this.receivingASession = busy;
     }
 
-    public Map<String, Object> getStatus(){
+    public Map<String, Object> getStatus() {
 
         Map<String, Object> result = new HashMap<>();
-        result.put("id", "*".repeat((id.length()+1)/2) + id.substring((id.length()+1)/2));
+        result.put("id", "*".repeat((id.length() + 1) / 2) + id.substring((id.length() + 1) / 2));
         result.put("tags", tags);
         result.put("driverSessionId", driverSessionId);
         result.put("isFree", isFreeNode());

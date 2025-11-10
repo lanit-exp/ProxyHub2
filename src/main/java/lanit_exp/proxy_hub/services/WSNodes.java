@@ -38,7 +38,7 @@ public class WSNodes {
                 stringNodeEntry.getValue().getId().equals(nodeId));
     }
 
-    public String getFreeNodeByTags(Set<String> tags) {
+    public String getFreeNodeByTagsAndMarkBusy(Set<String> tags) {
         if (tags == null || tags.isEmpty())
             throw new IllegalArgumentException("Отсутствуют теги для фильтрации нод.");
 
@@ -47,7 +47,7 @@ public class WSNodes {
                     stringNodeEntry.getValue().isFreeNode() && stringNodeEntry.getValue().getTags().containsAll(tags));
 
             if (nodeSession != null)
-                NODES.get(nodeSession).setBusy(true);
+                NODES.get(nodeSession).setReceivingASession(true);
 
             return nodeSession;
         }

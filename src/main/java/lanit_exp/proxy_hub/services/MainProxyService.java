@@ -39,9 +39,9 @@ public class MainProxyService {
 
         Set<String> tags = Arrays.stream(tag.split("&")).collect(Collectors.toSet());
 
-        String nodeSession = null;
+        String nodeSession;
         try {
-            nodeSession = nodes.getFreeNodeByTags(tags);
+            nodeSession = nodes.getFreeNodeByTagsAndMarkBusy(tags);
         } catch (Exception e) {
             return new ValueResponseEntity("Не удалось создать сессию: ошибка при поиске свободной ноды - '%s'".formatted(e.getMessage()))
                     .getEntity(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -56,12 +56,12 @@ public class MainProxyService {
 
         String driverSession = getDriverSession(responseEntity);
 
-        if (driverSession != null){
+        if (driverSession != null) {
             nodes.getNode(nodeSession).setDriverSessionId(driverSession);
             log.info("Driver SESSION '{}' - CREATE", driverSession);
-        } else {
-            nodes.getNode(nodeSession).setBusy(false);
         }
+
+        nodes.getNode(nodeSession).setReceivingASession(false);
 
         return responseEntity;
     }
@@ -78,7 +78,6 @@ public class MainProxyService {
 
         Node node = nodes.getNode(nodeSession);
         node.setDriverSessionId(null);
-        node.setBusy(false);
 
         log.info("Driver SESSION '{}' - CLOSE", sessionId);
 
