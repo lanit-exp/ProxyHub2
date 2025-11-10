@@ -14,13 +14,7 @@ public class WSNodes {
 
 
     public void registerNode(String sessionId, String nodeId, Set<String> tags) {
-        Node n = new Node(nodeId, tags);
-
-        // todo
-//        if (NODES.containsValue(n))
-//            throw new RuntimeException("Нода с id: '%s' уже зарегистрирована. Используйте другой node_id.".formatted(nodeId));
-
-        NODES.put(sessionId, n);
+        NODES.put(sessionId, new Node(nodeId, tags));
     }
 
     public Node getNode(String sessionId) {

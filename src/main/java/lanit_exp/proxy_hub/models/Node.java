@@ -24,7 +24,6 @@ public class Node {
 
     private LocalDateTime lastActivity;
 
-    @Setter
     private boolean busy;
 
 
@@ -38,8 +37,12 @@ public class Node {
         lastActivity = LocalDateTime.now();
     }
 
-    public boolean isFreeNode(){
+    public synchronized boolean isFreeNode(){
       return !busy || ChronoUnit.SECONDS.between(lastActivity, LocalDateTime.now()) > ProxyConfig.getProxyConfig().getIdleTimeout();
+    }
+
+    public synchronized void setBusy(boolean busy) {
+        this.busy = busy;
     }
 
     public Map<String, Object> getStatus(){
