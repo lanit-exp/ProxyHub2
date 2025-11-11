@@ -39,8 +39,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.setOrder(0);
         registry.addEndpoint("/ws")
-                .setAllowedOrigins("*")
-                .withSockJS();
+                .setAllowedOriginPatterns("*");
     }
 
     @Override
@@ -65,6 +64,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public ServletServerContainerFactoryBean createServletServerContainerFactoryBean() {
         ServletServerContainerFactoryBean container = new ServletServerContainerFactoryBean();
         container.setMaxTextMessageBufferSize(messageSizeLimit);
+        container.setMaxSessionIdleTimeout(0L);
         return container;
     }
 }
