@@ -1,6 +1,7 @@
 package lanit_exp.proxy_hub.services;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lanit_exp.proxy_hub.helpers.ApiConverter;
 import lanit_exp.proxy_hub.models.ApiRequest;
 import lanit_exp.proxy_hub.responses.ValueResponseEntity;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 
 @Service
 @RequiredArgsConstructor
@@ -20,13 +22,11 @@ public class NodeCommunicationService {
     private final SimpMessagingTemplate messagingTemplate;
     private final NodeMessageHolder nodeMessageHolder;
 
-    public ResponseEntity<?> sendMessage(String nodeSession, HttpServletRequest request) {
+    public ResponseEntity<?> sendMessage(String nodeSession, ApiRequest apiRequest) {
 
         String requestId = UUID.randomUUID().toString();
         Map<String, Object> headers = new HashMap<>();
         headers.put("request_id", requestId);
-
-        ApiRequest apiRequest = ApiConverter.requestToDTO(request);
 
         messagingTemplate.convertAndSend("/queue/to/" + nodeSession, apiRequest, headers);
 
@@ -35,12 +35,18 @@ public class NodeCommunicationService {
             String responseString = nodeMessageHolder.awaitMessage(requestId);
             return ApiConverter.responseToEntity(responseString);
 
-        } catch (Exception e) {
+        } catch (TimeoutException e) {
             return new ValueResponseEntity("[ NODE RESPONSE TIMEOUT ] Не получен ответ от драйвера (Proxy Node)")
                     .getEntity(HttpStatus.REQUEST_TIMEOUT);
+        } catch (Exception e) {
+            return new ValueResponseEntity("[ NODE RESPONSE EXCEPTION ] Ошибка получения ответа от драйвера (Proxy Node): " + e.getMessage())
+                    .getEntity(HttpStatus.BAD_REQUEST);
         }
 
     }
 
+    public ResponseEntity<?> sendMessage(String nodeSession, HttpServletRequest request) {
+       return sendMessage(nodeSession, ApiConverter.requestToDTO(request));
+    }
 
 }

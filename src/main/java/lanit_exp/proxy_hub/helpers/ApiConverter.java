@@ -1,4 +1,4 @@
-package lanit_exp.proxy_hub.services;
+package lanit_exp.proxy_hub.helpers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;

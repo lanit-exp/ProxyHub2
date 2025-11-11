@@ -13,16 +13,13 @@ public class WSNodes {
     private final Map<String, Node> NODES = new ConcurrentHashMap<>();
 
 
+    //------------------------------------------------------------------------------------------------------------------
     public void registerNode(String sessionId, String nodeId, Set<String> tags) {
         NODES.put(sessionId, new Node(nodeId, tags));
     }
 
     public Node getNode(String sessionId) {
         return NODES.get(sessionId);
-    }
-
-    public List<Map<String, Object>> getNodeStatuses() {
-        return NODES.values().stream().map(Node::getStatus).toList();
     }
 
     public void deleteNode(String sessionId) {
@@ -33,9 +30,13 @@ public class WSNodes {
         NODES.get(sessionId).updateLastActivity();
     }
 
-    public String getNodeSessionByNodeId(String nodeId) {
-        return getNodeSession(stringNodeEntry ->
-                stringNodeEntry.getValue().getId().equals(nodeId));
+    //------------------------------------------------------------------------------------------------------------------
+
+    public List<String> getNodeSessionsByNodeId(String nodeId) {
+        return NODES.entrySet().stream()
+                .filter(entry -> entry.getValue().getId().equals(nodeId))
+                .map(Map.Entry::getKey)
+                .toList();
     }
 
     public String getFreeNodeByTagsAndMarkBusy(Set<String> tags) {
@@ -43,8 +44,8 @@ public class WSNodes {
             throw new IllegalArgumentException("Отсутствуют теги для фильтрации нод.");
 
         synchronized (NODES) {
-            String nodeSession = getNodeSession(stringNodeEntry ->
-                    stringNodeEntry.getValue().isFreeNode() && stringNodeEntry.getValue().getTags().containsAll(tags));
+            String nodeSession = getNodeSession(entry -> entry.getValue().isFreeNode()
+                    && entry.getValue().getTags().containsAll(tags));
 
             if (nodeSession != null)
                 NODES.get(nodeSession).setReceivingASession(true);
@@ -59,8 +60,14 @@ public class WSNodes {
     }
 
 
+    //------------------------------------------------------------------------------------------------------------------
+
     public Integer numberOfConnectedNodes() {
         return NODES.size();
+    }
+
+    public List<Map<String, Object>> getNodeStatuses() {
+        return NODES.values().stream().map(Node::getStatus).toList();
     }
 
     //------------------------------------------------------------------------------------------------------------------

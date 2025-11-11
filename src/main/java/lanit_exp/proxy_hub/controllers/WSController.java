@@ -1,5 +1,6 @@
 package lanit_exp.proxy_hub.controllers;
 
+import lanit_exp.proxy_hub.helpers.StringHelper;
 import lanit_exp.proxy_hub.services.NodeMessageHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,11 +18,8 @@ public class WSController {
     @MessageMapping("/from")
     public void messageHandler(@Header(name = "request_id") String requestId, String message) {
 
-        String logMes = message.length() > 1000
-                ? message.substring(0, 1000) + "...[ size: %s ]...".formatted(message.length())
-                : message;
-
-        log.info("Получено сообщение от ноды '{}': {}", requestId, logMes);
+        log.info("Получено сообщение от ноды '{}': {}",
+                requestId, StringHelper.trimLargeString(message, 1000));
 
         messageHolder.addMessage(requestId, message);
     }

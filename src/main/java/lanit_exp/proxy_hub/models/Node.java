@@ -16,14 +16,12 @@ import java.util.Set;
 public class Node {
 
     private final String id;
-
     private final Set<String> tags;
+
 
     @Setter
     private String driverSessionId;
-
     private LocalDateTime lastActivity;
-
     private boolean receivingASession;
 
 
@@ -58,16 +56,4 @@ public class Node {
         return result;
     }
 
-    @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (object == null || getClass() != object.getClass()) return false;
-        Node node = (Node) object;
-        return Objects.equals(id, node.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
 }

@@ -6,11 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -18,18 +15,25 @@ public class NodeMessageHolder {
 
     private static final ConcurrentHashMap<String, NodeMessage> MESSAGES = new ConcurrentHashMap<>();
 
-    public void addMessage(String requestId, String message) {
+    public synchronized void addMessage(String requestId, String message) {
         MESSAGES.put(requestId, new NodeMessage(message));
+        notifyAll();
     }
 
-    public String awaitMessage(String requestId) throws TimeoutException, InterruptedException {
-        long end = new Date().getTime() + ProxyConfig.getProxyConfig().getMessageAwaitTimeout() * 1000;
+    public synchronized String awaitMessage(String requestId) throws TimeoutException, InterruptedException {
 
-        while (new Date().getTime() < end) {
-            if (MESSAGES.containsKey(requestId))
-                return MESSAGES.remove(requestId).getMessage();
+        long timeout = ProxyConfig.getProxyConfig().getMessageAwaitTimeout() * 1000L;
+        long end = System.currentTimeMillis() + timeout;
+        long remaining = timeout;
 
-            Thread.sleep(100);
+        while (remaining > 0) {
+            NodeMessage message = MESSAGES.remove(requestId);
+            if (message != null) {
+                return message.getMessage();
+            }
+
+            wait(remaining);
+            remaining = end - System.currentTimeMillis();
         }
 
         throw new TimeoutException();
@@ -41,11 +45,10 @@ public class NodeMessageHolder {
         log.info("Очистка очереди сообщений");
 
         try {
-            Stream<String> toDelete = MESSAGES.entrySet().stream()
-                    .filter(stringNodeMessageEntry -> stringNodeMessageEntry.getValue().isOutdated(ProxyConfig.getProxyConfig().getMessageAwaitTimeout()))
-                    .map(Map.Entry::getKey);
 
-            toDelete.forEach(MESSAGES::remove);
+            Integer timeout = ProxyConfig.getProxyConfig().getMessageAwaitTimeout();
+            MESSAGES.entrySet().removeIf(entry -> entry.getValue().isOutdated(timeout));
+
         } catch (Exception e) {
             log.error("Ошибка очистки старых сообщений", e);
         }

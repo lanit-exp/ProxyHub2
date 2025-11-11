@@ -49,9 +49,7 @@ public class ProxyController {
     @RequestMapping(value = {"/proxy/tag/{tag}/**"})
     public ResponseEntity<?> proxyTagRequest(HttpServletRequest request) {
         String mes = "Неизвестный тип запроса: '%s'".formatted(request.getRequestURI());
-
-        return new ValueResponseEntity(mes)
-                .getEntity(HttpStatus.BAD_REQUEST);
+        return new ValueResponseEntity(mes).getEntity(HttpStatus.BAD_REQUEST);
     }
 
 
@@ -72,8 +70,7 @@ public class ProxyController {
     @RequestMapping(value = {"/**"})
     public ResponseEntity<?> proxyRequest(HttpServletRequest request) {
         String mes = "Поддерживаются только запросы вида '/proxy/id/{id}/...' и '/proxy/tag/{tag}/...'";
-        return new ValueResponseEntity(mes)
-                .getEntity(HttpStatus.BAD_REQUEST);
+        return new ValueResponseEntity(mes).getEntity(HttpStatus.BAD_REQUEST);
     }
 
 
