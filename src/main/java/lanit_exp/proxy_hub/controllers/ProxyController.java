@@ -49,9 +49,7 @@ public class ProxyController {
     @RequestMapping(value = {"/proxy/tag/{tag}/**"})
     public ResponseEntity<?> proxyTagRequest(HttpServletRequest request) {
         String mes = "Неизвестный тип запроса: '%s'".formatted(request.getRequestURI());
-
-        return new ValueResponseEntity(mes)
-                .getEntity(HttpStatus.BAD_REQUEST);
+        return new ValueResponseEntity(mes).getEntity(HttpStatus.BAD_REQUEST);
     }
 
 
@@ -59,7 +57,17 @@ public class ProxyController {
 
     @RequestMapping(value = {"/proxy/status"}, method = RequestMethod.GET)
     public ResponseEntity<?> proxyHubStatus(HttpServletRequest request) {
-        return innerProxyHubService.getProxyHubStatus(request);
+        return innerProxyHubService.getProxyHubStatus();
+    }
+
+    @RequestMapping(value = {"/proxy/idle/{idle}"}, method = RequestMethod.GET)
+    public ResponseEntity<?> proxySetIdle(@PathVariable("idle") String idle, HttpServletRequest request) {
+        return innerProxyHubService.setIdleTimeout(idle);
+    }
+
+    @RequestMapping(value = {"/proxy/node_await/{node_await}"}, method = RequestMethod.GET)
+    public ResponseEntity<?> proxySetNodeAwait(@PathVariable("node_await") String nodeAwait, HttpServletRequest request) {
+        return innerProxyHubService.setNodeAwaitTimeout(nodeAwait);
     }
 
     //------------------------------------------------------------------------------------------------------------------
@@ -67,8 +75,7 @@ public class ProxyController {
     @RequestMapping(value = {"/**"})
     public ResponseEntity<?> proxyRequest(HttpServletRequest request) {
         String mes = "Поддерживаются только запросы вида '/proxy/id/{id}/...' и '/proxy/tag/{tag}/...'";
-        return new ValueResponseEntity(mes)
-                .getEntity(HttpStatus.BAD_REQUEST);
+        return new ValueResponseEntity(mes).getEntity(HttpStatus.BAD_REQUEST);
     }
 
 

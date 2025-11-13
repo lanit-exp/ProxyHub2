@@ -1,4 +1,4 @@
-package lanit_exp.proxy_hub.services;
+package lanit_exp.proxy_hub.helpers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -81,7 +81,7 @@ public class ApiConverter {
     }
 
     private static String normalizeUri(String uri) {
-        return uri.replaceAll("^/proxy/(id|tag)/[a-zA-Z0-9-_]+", "");
+        return uri.replaceAll("^/proxy/(id|tag)/[a-zA-Z0-9-_&]+", "");
     }
 
 }
