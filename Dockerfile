@@ -16,7 +16,7 @@ LABEL name="ProxyHub2"
 ENV APP_PORT $APP_PORT
 
 COPY ./entrypoint .
-COPY --from=build /data/target/*.jar ./proxy_hub.jar
+COPY --from=build /data/target/*.jar ./proxy_hub2.jar
 
 EXPOSE $APP_PORT
 
