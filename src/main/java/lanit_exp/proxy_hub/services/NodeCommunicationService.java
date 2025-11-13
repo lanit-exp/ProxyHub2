@@ -22,11 +22,12 @@ public class NodeCommunicationService {
     private final SimpMessagingTemplate messagingTemplate;
     private final NodeMessageHolder nodeMessageHolder;
 
-    public ResponseEntity<?> sendMessage(String nodeSession, ApiRequest apiRequest) {
+    public ResponseEntity<?> sendMessage(String nodeSession, ApiRequest apiRequest, String driverName) {
 
         String requestId = UUID.randomUUID().toString();
         Map<String, Object> headers = new HashMap<>();
         headers.put("request_id", requestId);
+        headers.put("driver_name", driverName);
 
         messagingTemplate.convertAndSend("/queue/to/" + nodeSession, apiRequest, headers);
 
@@ -46,7 +47,7 @@ public class NodeCommunicationService {
     }
 
     public ResponseEntity<?> sendMessage(String nodeSession, HttpServletRequest request) {
-       return sendMessage(nodeSession, ApiConverter.requestToDTO(request));
+       return sendMessage(nodeSession, ApiConverter.requestToDTO(request), null);
     }
 
 }

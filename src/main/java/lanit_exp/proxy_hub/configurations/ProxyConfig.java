@@ -25,6 +25,10 @@ public class ProxyConfig {
     @Setter
     private Integer idleTimeout;
 
+    @Value("${node.session.await_timeout}")
+    @Setter
+    private Integer nodeAwaitTimeout;
+
 
     @Value("${proxyHub.version}")
     private String version;

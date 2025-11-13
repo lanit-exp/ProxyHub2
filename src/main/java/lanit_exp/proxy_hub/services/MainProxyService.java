@@ -1,6 +1,7 @@
 package lanit_exp.proxy_hub.services;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lanit_exp.proxy_hub.configurations.ProxyConfig;
 import lanit_exp.proxy_hub.helpers.ApiConverter;
 import lanit_exp.proxy_hub.helpers.JsonHelper;
 import lanit_exp.proxy_hub.models.ApiRequest;
@@ -48,26 +49,32 @@ public class MainProxyService {
 
         ApiRequest apiRequest = ApiConverter.requestToDTO(request);
 
+        String runId = JsonHelper.getValueByJsonPath(apiRequest.getBody(), "proxy:options", "run_id");
+        String driverName = JsonHelper.getValueByJsonPath(apiRequest.getBody(), "proxy:options", "driver_name");
+
         String nodeSession;
         try {
-            nodeSession = nodes.getFreeNodeByTagsAndMarkBusy(tags);
+            nodeSession = nodes.getFreeNodeByTagsAndMarkBusy(tags, runId, driverName, ProxyConfig.getProxyConfig().getNodeAwaitTimeout());
         } catch (Exception e) {
             return new ValueResponseEntity("Не удалось создать сессию: ошибка при поиске свободной ноды - '%s'".formatted(e.getMessage()))
                     .getEntity(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         if (nodeSession == null) {
-            return new ValueResponseEntity("Не удалось создать сессию: не найдена свободная нода с тегами - '%s'".formatted(tag))
+            return new ValueResponseEntity("Не удалось создать сессию: Не найдена свободная нода [tags = '%s'; run_id = '%s'; driver_name = '%s'] в течении %d сек."
+                    .formatted(tag, runId, driverName, ProxyConfig.getProxyConfig().getNodeAwaitTimeout()))
                     .getEntity(HttpStatus.NOT_FOUND);
         }
 
-        ResponseEntity<?> responseEntity = nodeCommunicationService.sendMessage(nodeSession, apiRequest);
+        ResponseEntity<?> responseEntity = nodeCommunicationService.sendMessage(nodeSession, apiRequest, driverName);
 
         String driverSession = getDriverSession(responseEntity);
 
         if (driverSession != null) {
-            nodes.getNode(nodeSession).setDriverSessionId(driverSession);
-            log.info("Driver SESSION '{}' - CREATE", driverSession);
+            nodes.getNode(nodeSession)
+                    .addDriverSessionId(driverSession)
+                    .setRunId(runId);
+            log.info("Driver SESSION: '{}' RUN_ID: '{}' - CREATE", driverSession, runId);
         }
 
         nodes.getNode(nodeSession).setReceivingASession(false);
@@ -86,7 +93,7 @@ public class MainProxyService {
         ResponseEntity<?> responseEntity = nodeCommunicationService.sendMessage(nodeSession, request);
 
         Node node = nodes.getNode(nodeSession);
-        node.setDriverSessionId(null);
+        node.deleteDriverSessionId(sessionId);
 
         log.info("Driver SESSION '{}' - CLOSE", sessionId);
 
@@ -107,7 +114,7 @@ public class MainProxyService {
 
     //------------------------------------------------------------------------------------------------------------------
     public String getDriverSession(ResponseEntity<?> responseEntity) {
-        return JsonHelper.getDriverSession((String) responseEntity.getBody(), "value", "sessionId");
+        return JsonHelper.getValueByJsonPath((String) responseEntity.getBody(), "value", "sessionId");
     }
 
 }

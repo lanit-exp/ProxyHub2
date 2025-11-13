@@ -14,8 +14,8 @@ public class WSNodes {
 
 
     //------------------------------------------------------------------------------------------------------------------
-    public void registerNode(String sessionId, String nodeId, Set<String> tags) {
-        NODES.put(sessionId, new Node(nodeId, tags));
+    public void registerNode(String sessionId, String nodeId, Set<String> tags, Set<String> driverNames) {
+        NODES.put(sessionId, new Node(nodeId, tags, driverNames));
     }
 
     public Node getNode(String sessionId) {
@@ -34,29 +34,40 @@ public class WSNodes {
 
     public List<String> getNodeSessionsByNodeId(String nodeId) {
         return NODES.entrySet().stream()
-                .filter(entry -> entry.getValue().getId().equals(nodeId))
+                .filter(entry -> entry.getValue().getNodeId().equals(nodeId))
                 .map(Map.Entry::getKey)
                 .toList();
     }
 
-    public String getFreeNodeByTagsAndMarkBusy(Set<String> tags) {
+    public String getFreeNodeByTagsAndMarkBusy(Set<String> tags, String runId, String driverName, Integer awaitTimeout) {
         if (tags == null || tags.isEmpty())
             throw new IllegalArgumentException("Отсутствуют теги для фильтрации нод.");
 
-        synchronized (NODES) {
-            String nodeSession = getNodeSession(entry -> entry.getValue().isFreeNode()
-                    && entry.getValue().getTags().containsAll(tags));
+        long end = System.currentTimeMillis() + awaitTimeout * 1000L;
 
-            if (nodeSession != null)
-                NODES.get(nodeSession).setReceivingASession(true);
+        do {
+            synchronized (NODES) {
+                String nodeSession = getSessionIdByNodeParams(tags, runId, driverName);
 
-            return nodeSession;
-        }
+                if (nodeSession != null) {
+                    NODES.get(nodeSession).setReceivingASession(true);
+                    return nodeSession;
+                }
+            }
+
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        } while (System.currentTimeMillis() < end);
+
+        return null;
     }
 
     public String getNodeByDriverSessionId(String driverSessionId) {
-        return getNodeSession(stringNodeEntry ->
-                Objects.equals(stringNodeEntry.getValue().getDriverSessionId(), driverSessionId));
+        return getNodeSession(entry ->
+                entry.getValue().containsDriverSessionId(driverSessionId));
     }
 
 
@@ -81,5 +92,14 @@ public class WSNodes {
                 .orElse(null);
     }
 
+    private String getSessionIdByNodeParams(Set<String> tags, String runId, String driverName) {
+
+        if (runId != null && !runId.isEmpty() && driverName != null && !driverName.isEmpty()) {
+            String nodeSession = getNodeSession(entry -> Objects.equals(entry.getValue().getRunId(), runId) && !entry.getValue().isFreeNode());
+            if (nodeSession != null) return nodeSession;
+        }
+
+        return getNodeSession(entry -> entry.getValue().isFreeNode() && entry.getValue().getTags().containsAll(tags));
+    }
 
 }

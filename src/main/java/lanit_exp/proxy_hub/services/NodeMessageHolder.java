@@ -40,13 +40,15 @@ public class NodeMessageHolder {
     }
 
 
+    //------------------------------------------------------------------------------------------------------------------
+
     @Scheduled(fixedDelay = 300_000)
     private void clearOldMessages() {
         log.info("Очистка очереди сообщений");
 
         try {
 
-            Integer timeout = ProxyConfig.getProxyConfig().getMessageAwaitTimeout();
+            Integer timeout = ProxyConfig.getProxyConfig().getMessageLiveTimeout();
             MESSAGES.entrySet().removeIf(entry -> entry.getValue().isOutdated(timeout));
 
         } catch (Exception e) {

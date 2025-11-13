@@ -48,12 +48,32 @@ public class InnerProxyHubService {
                     .body(Map.of("error", "Некорректное значение параметра idleTimeout. Таймаут должен быть в диапазоне 0 - 1800 сек."));
         }
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("nodeIdleTimeout", ProxyConfig.getProxyConfig().getIdleTimeout());
+        return ResponseEntity.status(200)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("nodeIdleTimeout", ProxyConfig.getProxyConfig().getIdleTimeout()));
+
+    }
+
+    public ResponseEntity<?> setNodeAwaitTimeout(String nodeAwaitTimeout) {
+
+        try {
+            int timeout = Integer.parseInt(nodeAwaitTimeout);
+
+            if (timeout > 0 && timeout < 1800) {
+                ProxyConfig.getProxyConfig().setNodeAwaitTimeout(timeout);
+            } else {
+                throw new RuntimeException();
+            }
+
+        } catch (Exception ignore) {
+            return ResponseEntity.status(400)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(Map.of("error", "Некорректное значение параметра nodeAwaitTimeout. Таймаут должен быть в диапазоне 0 - 1800 сек."));
+        }
 
         return ResponseEntity.status(200)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(result);
+                .body(Map.of("nodeAwaitTimeout", ProxyConfig.getProxyConfig().getIdleTimeout()));
 
     }
 

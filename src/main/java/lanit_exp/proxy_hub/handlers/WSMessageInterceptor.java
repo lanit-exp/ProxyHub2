@@ -64,7 +64,10 @@ public class WSMessageInterceptor implements ChannelInterceptor {
 
 
     private void registerWSNode(StompHeaderAccessor accessor) {
-        wsNodes.registerNode(accessor.getSessionId(), getNodeId(accessor), getNodeTags(accessor));
+
+        wsNodes.registerNode(accessor.getSessionId(), getNodeId(accessor),
+                getHeaderValues(accessor, "node_tags"), getHeaderValues(accessor, "driver_names"));
+
         log.info("Нода подключена: {}. Активных соединений: {}", accessor.getSessionId(), wsNodes.numberOfConnectedNodes());
     }
 
@@ -106,9 +109,6 @@ public class WSMessageInterceptor implements ChannelInterceptor {
             List<?> nodeIds = (List) ((MultiValueMap) accessor.getHeader("nativeHeaders"))
                     .get("node_id");
 
-            if (nodeIds == null || nodeIds.isEmpty())
-                throw new IncorrectNodeIdException();
-
             return (String) nodeIds.get(0);
 
         } catch (Exception e) {
@@ -116,10 +116,10 @@ public class WSMessageInterceptor implements ChannelInterceptor {
         }
     }
 
-    private Set<String> getNodeTags(StompHeaderAccessor accessor) {
+    private Set<String> getHeaderValues(StompHeaderAccessor accessor, String headerName) {
 
         List<?> tagsList = (List) ((MultiValueMap) accessor.getHeader("nativeHeaders"))
-                .get("node_tags");
+                .get(headerName);
 
         if (tagsList == null || tagsList.isEmpty()) return new HashSet<>();
 

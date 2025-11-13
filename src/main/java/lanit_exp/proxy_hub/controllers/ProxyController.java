@@ -61,8 +61,13 @@ public class ProxyController {
     }
 
     @RequestMapping(value = {"/proxy/idle/{idle}"}, method = RequestMethod.GET)
-    public ResponseEntity<?> proxyHubStatus(@PathVariable("idle") String idle, HttpServletRequest request) {
+    public ResponseEntity<?> proxySetIdle(@PathVariable("idle") String idle, HttpServletRequest request) {
         return innerProxyHubService.setIdleTimeout(idle);
+    }
+
+    @RequestMapping(value = {"/proxy/node_await/{node_await}"}, method = RequestMethod.GET)
+    public ResponseEntity<?> proxySetNodeAwait(@PathVariable("node_await") String nodeAwait, HttpServletRequest request) {
+        return innerProxyHubService.setNodeAwaitTimeout(nodeAwait);
     }
 
     //------------------------------------------------------------------------------------------------------------------
