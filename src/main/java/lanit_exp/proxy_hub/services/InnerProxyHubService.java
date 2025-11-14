@@ -24,6 +24,7 @@ public class InnerProxyHubService {
         result.put("nodes", nodes.getNodeStatuses());
         result.put("version", ProxyConfig.getProxyConfig().getVersion());
         result.put("nodeIdleTimeout", ProxyConfig.getProxyConfig().getIdleTimeout());
+        result.put("nodeAwaitTimeout", ProxyConfig.getProxyConfig().getNodeAwaitTimeout());
 
         return ResponseEntity.status(200)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -73,7 +74,7 @@ public class InnerProxyHubService {
 
         return ResponseEntity.status(200)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(Map.of("nodeAwaitTimeout", ProxyConfig.getProxyConfig().getIdleTimeout()));
+                .body(Map.of("nodeAwaitTimeout", ProxyConfig.getProxyConfig().getNodeAwaitTimeout()));
 
     }
 
