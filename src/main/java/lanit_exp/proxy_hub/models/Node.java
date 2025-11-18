@@ -35,8 +35,14 @@ public class Node {
     }
 
     public synchronized boolean isFreeNode() {
-        return !receivingASession &&
-                (driverSessionIds.isEmpty() || ChronoUnit.SECONDS.between(lastActivity, LocalDateTime.now()) > ProxyConfig.getProxyConfig().getIdleTimeout());
+        clearOldDriverSession();
+        return !receivingASession && driverSessionIds.isEmpty();
+    }
+
+    private void clearOldDriverSession(){
+        if(!driverSessionIds.isEmpty() && ChronoUnit.SECONDS.between(lastActivity, LocalDateTime.now()) > ProxyConfig.getProxyConfig().getIdleTimeout()){
+            driverSessionIds.clear();
+        }
     }
 
     public synchronized void setReceivingASession(boolean busy) {
