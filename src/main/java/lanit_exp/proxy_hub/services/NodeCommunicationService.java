@@ -5,6 +5,7 @@ import lanit_exp.proxy_hub.helpers.ApiConverter;
 import lanit_exp.proxy_hub.models.ApiRequest;
 import lanit_exp.proxy_hub.responses.ValueResponseEntity;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -17,6 +18,7 @@ import java.util.concurrent.TimeoutException;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class NodeCommunicationService {
 
     private final SimpMessagingTemplate messagingTemplate;
@@ -30,6 +32,8 @@ public class NodeCommunicationService {
         headers.put("driver_name", driverName);
 
         messagingTemplate.convertAndSend("/queue/to/" + nodeSession, apiRequest, headers);
+
+        log.info(">>>>> REQUEST ID '{}': {} - {}", requestId, apiRequest.getMethod(), apiRequest.getUri());
 
         try {
 

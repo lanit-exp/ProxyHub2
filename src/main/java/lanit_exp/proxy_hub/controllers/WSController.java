@@ -18,8 +18,7 @@ public class WSController {
     @MessageMapping("/from")
     public void messageHandler(@Header(name = "request_id") String requestId, String message) {
 
-        log.info("Получено сообщение от ноды '{}': {}",
-                requestId, StringHelper.trimLargeString(message, 1000));
+        log.info("<<<<< RESPONSE ID '{}': {}", requestId, StringHelper.trimLargeString(message, 500));
 
         messageHolder.addMessage(requestId, message);
     }
