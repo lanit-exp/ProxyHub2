@@ -1,0 +1,7 @@
+services:
+  proxyhub2:
+    build: .
+    container_name: proxyhub2
+    ports:
+      - "4448:4448"
+    restart: unless-stopped
