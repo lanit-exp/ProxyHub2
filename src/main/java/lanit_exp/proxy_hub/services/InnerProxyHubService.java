@@ -18,7 +18,12 @@ public class InnerProxyHubService {
     private final WSNodes nodes;
 
     public ResponseEntity<?> getProxyHubStatus() {
+        return ResponseEntity.status(200)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(getProxyHubStatusJson());
+    }
 
+    public Map<String, Object> getProxyHubStatusJson() {
         Map<String, Object> result = new HashMap<>();
         result.put("activeNode", nodes.numberOfConnectedNodes());
         result.put("nodes", nodes.getNodeStatuses());
@@ -26,10 +31,7 @@ public class InnerProxyHubService {
         result.put("nodeIdleTimeout", ProxyConfig.getProxyConfig().getIdleTimeout());
         result.put("nodeAwaitTimeout", ProxyConfig.getProxyConfig().getNodeAwaitTimeout());
 
-        return ResponseEntity.status(200)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(result);
-
+        return result;
     }
 
     public ResponseEntity<?> setIdleTimeout(String idleTimeout) {

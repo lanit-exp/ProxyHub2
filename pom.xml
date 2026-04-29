@@ -6,7 +6,7 @@
 
     <groupId>com.github.lanit-exp</groupId>
     <artifactId>ProxyHub2</artifactId>
-    <version>1.3.3</version>
+    <version>1.4.0</version>
     <name>ProxyHub2</name>
     <packaging>jar</packaging>
 
@@ -19,7 +19,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.7</version>
+        <version>3.5.14</version>
         <relativePath/>
     </parent>
 
@@ -34,6 +34,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
 
         <dependency>
