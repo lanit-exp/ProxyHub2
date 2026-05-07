@@ -95,7 +95,9 @@ public class WSNodes {
     private String getSessionIdByNodeParams(Set<String> tags, String runId, String driverName) {
 
         if (runId != null && !runId.isEmpty() && driverName != null && !driverName.isEmpty()) {
-            String nodeSession = getNodeSession(entry -> Objects.equals(entry.getValue().getRunId(), runId) && !entry.getValue().isFreeNode());
+            String nodeSession = getNodeSession(entry ->
+                    (Objects.equals(entry.getValue().getRunId(), runId) || entry.getValue().getDriverSessionIds().contains(runId))
+                            && !entry.getValue().isFreeNode());
             if (nodeSession != null) return nodeSession;
         }
 
