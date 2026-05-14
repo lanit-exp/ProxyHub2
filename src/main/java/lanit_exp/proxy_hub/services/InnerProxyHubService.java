@@ -26,7 +26,7 @@ public class InnerProxyHubService {
     public Map<String, Object> getProxyHubStatusJson() {
         Map<String, Object> result = new HashMap<>();
         result.put("activeNode", nodes.numberOfConnectedNodes());
-        result.put("nodes", nodes.getNodeStatuses());
+        result.put("nodes", nodes.getNodeInfo());
         result.put("version", ProxyConfig.getProxyConfig().getVersion());
         result.put("nodeIdleTimeout", ProxyConfig.getProxyConfig().getIdleTimeout());
         result.put("nodeAwaitTimeout", ProxyConfig.getProxyConfig().getNodeAwaitTimeout());

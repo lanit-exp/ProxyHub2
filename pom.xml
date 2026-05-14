@@ -6,7 +6,7 @@
 
     <groupId>com.github.lanit-exp</groupId>
     <artifactId>ProxyHub2</artifactId>
-    <version>1.4.1</version>
+    <version>1.7.0</version>
     <name>ProxyHub2</name>
     <packaging>jar</packaging>
 

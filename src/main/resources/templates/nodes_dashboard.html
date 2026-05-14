@@ -69,7 +69,9 @@
             color: #f8fafc;
         }
 
-        .stat-highlight { color: var(--accent-green) !important; }
+        .stat-highlight {
+            color: var(--accent-green) !important;
+        }
 
         /* Сетка карточек нод */
         .nodes-grid {
@@ -86,12 +88,22 @@
             position: relative;
             transition: transform 0.2s;
             border-top: 1px solid #334155;
+            min-width: 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
-        .node-card:hover { transform: translateY(-3px); }
+        .node-card:hover {
+            transform: translateY(-3px);
+        }
 
-        .node-card.free { border-left-color: var(--accent-green); }
-        .node-card.busy { border-left-color: var(--accent-red); }
+        .node-card.free {
+            border-left-color: var(--accent-green);
+        }
+
+        .node-card.busy {
+            border-left-color: var(--accent-red);
+        }
 
         /* Статус-бейдж сверху */
         .status-badge {
@@ -104,8 +116,16 @@
             font-weight: 800;
             text-transform: uppercase;
         }
-        .free .status-badge { background: var(--accent-green); color: #064e3b; }
-        .busy .status-badge { background: var(--accent-red); color: #450a0a; }
+
+        .free .status-badge {
+            background: var(--accent-green);
+            color: #064e3b;
+        }
+
+        .busy .status-badge {
+            background: var(--accent-red);
+            color: #450a0a;
+        }
 
         /* ID Ноды вынесен в отдельный блок с отступом */
         .node-id-box {
@@ -129,8 +149,16 @@
             font-size: 0.85rem;
         }
 
-        .label { color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase; }
-        .value { color: var(--text-main); }
+        .label {
+            color: var(--text-dim);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
+
+        .value {
+            color: var(--text-main);
+        }
+
         .session-id {
             color: #cbd5e1;
             font-size: 0.8rem;
@@ -152,7 +180,7 @@
             border: 1px solid #475569;
             padding: 2px 10px;
             border-radius: 4px;
-            font-size: 0.7rem;
+            font-size: 0.8rem;
             color: var(--text-dim);
         }
     </style>
@@ -194,8 +222,25 @@
 
             <div class="status-badge" th:text="${node.isFree} ? 'Свободна' : 'Занята'"></div>
 
+            <!-- Имя ноды и версия -->
+            <div style="margin-bottom: 15px;">
+                <div class="label">Node Name</div>
+                <div style="font-size: 1.1rem; font-weight: 600; color: #fff; margin-top: 4px;"
+                     th:text="${node.nodeName}">NODE-NAME
+                </div>
+                <div style="font-size: 0.75rem; color: #60a5fa;" th:text="${node.nodeVersion}">v1.0</div>
+            </div>
+
             <div class="label" style="margin-bottom: 5px;">Node ID</div>
             <div class="node-id-box" th:text="${node.nodeId}">ID_PLACEHOLDER</div>
+
+            <!-- Описание ноды -->
+            <div class="node-info-row" th:if="${node.nodeDescription != null}">
+                <span class="label">Описание:</span>
+                <span class="value"
+                      style="font-style: italic; color: #cbd5e1; border-left: 2px solid #475569; padding-left: 10px; margin-top: 5px;"
+                      th:text="${node.nodeDescription}">Description text</span>
+            </div>
 
             <div class="node-info-row">
                 <span class="label">Последняя активность:</span>
@@ -204,14 +249,41 @@
 
             <div class="node-info-row">
                 <span class="label">Активные сессии:</span>
-                <div th:if="${#lists.isEmpty(node.driverSessionIds)}" class="value" style="color: var(--text-dim); italic">Нет активных сессий</div>
+                <div th:if="${#lists.isEmpty(node.driverSessionIds)}" class="value"
+                     style="color: var(--text-dim); font-style: italic">Нет активных сессий
+                </div>
                 <div th:each="sessionId : ${node.driverSessionIds}">
                     <span class="session-id" th:text="${sessionId}"></span>
                 </div>
             </div>
 
-            <div class="tag-container">
-                <span class="tag" th:each="tag : ${node.tags}" th:text="${tag}"></span>
+            <!-- Блок Драйверов -->
+            <div style="margin-top: 15px;">
+                <div class="label" style="margin-bottom: 5px;">Драйвера</div>
+                <div class="tag-container">
+                    <!-- Если драйверов нет -->
+                    <span th:if="${#lists.isEmpty(node.driverNames)}" class="value"
+                          style="font-size: 0.7rem; font-style: italic; color: var(--text-dim);">Не указаны</span>
+                    <!-- Список драйверов (синие) -->
+                    <span class="tag"
+                          style="border-color: #60a5fa; color: #60a5fa; background: rgba(96, 165, 250, 0.1);"
+                          th:each="driver : ${node.driverNames}"
+                          th:text="${driver}"></span>
+                </div>
+            </div>
+
+            <!-- Блок Тегов -->
+            <div style="margin-top: 15px;">
+                <div class="label" style="margin-bottom: 5px;">Тэги</div>
+                <div class="tag-container">
+                    <!-- Если тегов нет -->
+                    <span th:if="${#lists.isEmpty(node.tags)}" class="value"
+                          style="font-size: 0.7rem; font-style: italic; color: var(--text-dim);">Нет тэгов</span>
+                    <!-- Список тегов (серые) -->
+                    <span class="tag"
+                          style="border-color: #cc8e58; color: #cc8e58; background: rgba(96, 165, 250, 0.1);"
+                          th:each="tag : ${node.tags}" th:text="${tag}"></span>
+                </div>
             </div>
         </div>
     </div>
