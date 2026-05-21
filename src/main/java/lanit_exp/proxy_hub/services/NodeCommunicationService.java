@@ -31,11 +31,11 @@ public class NodeCommunicationService {
         headers.put("request_id", requestId);
         headers.put("driver_name", driverName);
 
-        messagingTemplate.convertAndSend("/queue/to/" + nodeSession, apiRequest, headers);
-
-        log.info(">>>>> REQUEST ID '{}': {} - {}", requestId, apiRequest.getMethod(), apiRequest.getUri());
-
         try {
+
+            messagingTemplate.convertAndSend("/queue/to/" + nodeSession, apiRequest, headers);
+
+            log.info(">>>>> REQUEST ID '{}': {} - {}", requestId, apiRequest.getMethod(), apiRequest.getUri());
 
             String responseString = nodeMessageHolder.awaitMessage(requestId);
             return ApiConverter.responseToEntity(responseString);
@@ -51,7 +51,7 @@ public class NodeCommunicationService {
     }
 
     public ResponseEntity<?> sendMessage(String nodeSession, HttpServletRequest request) {
-       return sendMessage(nodeSession, ApiConverter.requestToDTO(request), null);
+        return sendMessage(nodeSession, ApiConverter.requestToDTO(request), null);
     }
 
 }

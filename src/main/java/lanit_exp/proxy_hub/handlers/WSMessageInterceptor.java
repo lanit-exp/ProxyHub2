@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
@@ -53,10 +54,18 @@ public class WSMessageInterceptor implements ChannelInterceptor {
             deleteWSNode(accessor);
         } else if (StompCommand.SEND.equals(accessor.getCommand())) {
             updateWSNodeActivity(accessor);
-        } else if(SimpMessageType.CONNECT_ACK.equals(accessor.getHeader("simpMessageType"))) {
+        } else if (SimpMessageType.CONNECT_ACK.equals(accessor.getHeader("simpMessageType"))) {
             StompHeaderAccessor newAccessor = StompHeaderAccessor.create(StompCommand.CONNECTED);
             newAccessor.copyHeaders(accessor.toMap());
             newAccessor.addNativeHeader("node_session", accessor.getSessionId());
+
+            long[] hb = (long[]) accessor.getHeader(SimpMessageHeaderAccessor.HEART_BEAT_HEADER);
+            if (hb != null) {
+                newAccessor.setHeartbeat(hb[0], hb[1]);
+            } else {
+                newAccessor.setHeartbeat(0, 0);
+            }
+
             return MessageBuilder.createMessage(message.getPayload(), newAccessor.getMessageHeaders());
         }
 
@@ -68,9 +77,9 @@ public class WSMessageInterceptor implements ChannelInterceptor {
 
         String sessionId = accessor.getSessionId();
         String nodeId = getHeaderValue(accessor, "node_id");
-        String nodeName = getHeaderValue(accessor, "node_name");;
-        String nodeVersion = getHeaderValue(accessor, "node_version");;
-        String nodeDescription = getHeaderValue(accessor, "node_description");;
+        String nodeName = getHeaderValue(accessor, "node_name");
+        String nodeVersion = getHeaderValue(accessor, "node_version");
+        String nodeDescription = getHeaderValue(accessor, "node_description");
         Set<String> tags = getHeaderValues(accessor, "node_tags");
         Set<String> driverNames = getHeaderValues(accessor, "driver_names");
 
@@ -103,7 +112,7 @@ public class WSMessageInterceptor implements ChannelInterceptor {
     }
 
 
-    private void closeCurrentWSSession(StompHeaderAccessor accessor, Exception e){
+    private void closeCurrentWSSession(StompHeaderAccessor accessor, Exception e) {
         try {
             wsSessions.getSession(accessor.getSessionId())
                     .close(CloseStatus.SERVER_ERROR.withReason("Session closed by server: " + e.getMessage()));
