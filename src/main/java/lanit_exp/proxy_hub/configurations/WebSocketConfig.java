@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
@@ -27,11 +29,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private Integer messageSizeLimit;
     @Value("${ws.message.send_time_limit}")
     private Integer messageSendTimeLimit;
+    @Value("${ws.heartbeat}")
+    private Integer wsHeartBeat;
 
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/queue");
+        config.enableSimpleBroker("/queue")
+                .setTaskScheduler(taskScheduler())
+                .setHeartbeatValue(new long[]{wsHeartBeat, wsHeartBeat});
         config.setApplicationDestinationPrefixes("/node");
     }
 
@@ -60,11 +66,21 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.setSendTimeLimit(messageSendTimeLimit);
     }
 
+    //------------------------------------------------------------------------------------------------------------------
+
     @Bean
     public ServletServerContainerFactoryBean createServletServerContainerFactoryBean() {
         ServletServerContainerFactoryBean container = new ServletServerContainerFactoryBean();
         container.setMaxTextMessageBufferSize(messageSizeLimit);
         container.setMaxSessionIdleTimeout(0L);
         return container;
+    }
+
+    private TaskScheduler taskScheduler() {
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.setPoolSize(4);
+        scheduler.setThreadNamePrefix("ws-heartbeat-");
+        scheduler.initialize();
+        return scheduler;
     }
 }

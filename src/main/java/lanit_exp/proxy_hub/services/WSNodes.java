@@ -14,8 +14,8 @@ public class WSNodes {
 
 
     //------------------------------------------------------------------------------------------------------------------
-    public void registerNode(String sessionId, String nodeId, Set<String> tags, Set<String> driverNames) {
-        NODES.put(sessionId, new Node(nodeId, tags, driverNames));
+    public void registerNode(String sessionId, Node node) {
+        NODES.put(sessionId, node);
     }
 
     public Node getNode(String sessionId) {
@@ -77,8 +77,8 @@ public class WSNodes {
         return NODES.size();
     }
 
-    public List<Map<String, Object>> getNodeStatuses() {
-        return NODES.values().stream().map(Node::getStatus).toList();
+    public List<Map<String, Object>> getNodeInfo() {
+        return NODES.values().stream().map(Node::getInfo).toList();
     }
 
     //------------------------------------------------------------------------------------------------------------------
@@ -95,7 +95,9 @@ public class WSNodes {
     private String getSessionIdByNodeParams(Set<String> tags, String runId, String driverName) {
 
         if (runId != null && !runId.isEmpty() && driverName != null && !driverName.isEmpty()) {
-            String nodeSession = getNodeSession(entry -> Objects.equals(entry.getValue().getRunId(), runId) && !entry.getValue().isFreeNode());
+            String nodeSession = getNodeSession(entry ->
+                    (Objects.equals(entry.getValue().getRunId(), runId) || entry.getValue().getDriverSessionIds().contains(runId))
+                            && !entry.getValue().isFreeNode());
             if (nodeSession != null) return nodeSession;
         }
 

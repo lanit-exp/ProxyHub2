@@ -6,7 +6,7 @@ public class StringHelper {
         if(sourseString == null) return null;
 
         return sourseString.length() > maxLimit
-                ? sourseString.substring(0, maxLimit) + "...[ size: %s ]...".formatted(sourseString.length())
+                ? sourseString.substring(0, maxLimit) + " ... [ Content-Length: %s ] ".formatted(sourseString.length())
                 : sourseString;
     }
 

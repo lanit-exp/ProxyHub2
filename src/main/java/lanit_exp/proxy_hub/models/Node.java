@@ -12,21 +12,37 @@ import java.util.*;
 public class Node {
 
     private final String nodeId;
+
+    private final String nodeName;
+    private final String nodeVersion;
+    private final String nodeDescription;
+
     private final Set<String> tags;
     private final Set<String> driverNames;
 
 
     private final Set<String> driverSessionIds = new HashSet<>();
+
     private String runId;
     private boolean receivingASession;
 
     private LocalDateTime lastActivity;
 
 
-    public Node(String nodeId, Set<String> tags, Set<String> driverNames) {
+    public Node(String nodeId,
+                String nodeName,
+                String nodeVersion,
+                String nodeDescription,
+                Set<String> tags,
+                Set<String> driverNames) {
+
         this.nodeId = nodeId;
+        this.nodeName = nodeName;
+        this.nodeVersion = nodeVersion;
+        this.nodeDescription = nodeDescription;
         this.tags = tags;
         this.driverNames = driverNames;
+
         updateLastActivity();
     }
 
@@ -35,8 +51,14 @@ public class Node {
     }
 
     public synchronized boolean isFreeNode() {
-        return !receivingASession &&
-                (driverSessionIds.isEmpty() || ChronoUnit.SECONDS.between(lastActivity, LocalDateTime.now()) > ProxyConfig.getProxyConfig().getIdleTimeout());
+        clearOldDriverSession();
+        return !receivingASession && driverSessionIds.isEmpty();
+    }
+
+    private void clearOldDriverSession(){
+        if(!driverSessionIds.isEmpty() && ChronoUnit.SECONDS.between(lastActivity, LocalDateTime.now()) > ProxyConfig.getProxyConfig().getIdleTimeout()){
+            driverSessionIds.clear();
+        }
     }
 
     public synchronized void setReceivingASession(boolean busy) {
@@ -65,10 +87,13 @@ public class Node {
 
     //------------------------------------------------------------------------------------------------------------------
 
-    public Map<String, Object> getStatus() {
+    public Map<String, Object> getInfo() {
 
         Map<String, Object> result = new HashMap<>();
         result.put("nodeId", "*".repeat((nodeId.length() + 1) / 2) + nodeId.substring((nodeId.length() + 1) / 2));
+        result.put("nodeName", nodeName);
+        result.put("nodeVersion", nodeVersion);
+        result.put("nodeDescription", nodeDescription);
         result.put("tags", tags);
         result.put("driverNames", driverNames);
         result.put("runId", runId);

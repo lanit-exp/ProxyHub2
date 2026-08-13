@@ -2,12 +2,14 @@ package lanit_exp.proxy_hub.handlers;
 
 import lanit_exp.proxy_hub.exceptions.IncorrectDestinationException;
 import lanit_exp.proxy_hub.exceptions.IncorrectNodeIdException;
+import lanit_exp.proxy_hub.models.Node;
 import lanit_exp.proxy_hub.services.WSNodes;
 import lanit_exp.proxy_hub.services.WSSessions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessageType;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
@@ -52,10 +54,18 @@ public class WSMessageInterceptor implements ChannelInterceptor {
             deleteWSNode(accessor);
         } else if (StompCommand.SEND.equals(accessor.getCommand())) {
             updateWSNodeActivity(accessor);
-        } else if(SimpMessageType.CONNECT_ACK.equals(accessor.getHeader("simpMessageType"))) {
+        } else if (SimpMessageType.CONNECT_ACK.equals(accessor.getHeader("simpMessageType"))) {
             StompHeaderAccessor newAccessor = StompHeaderAccessor.create(StompCommand.CONNECTED);
             newAccessor.copyHeaders(accessor.toMap());
             newAccessor.addNativeHeader("node_session", accessor.getSessionId());
+
+            long[] hb = (long[]) accessor.getHeader(SimpMessageHeaderAccessor.HEART_BEAT_HEADER);
+            if (hb != null) {
+                newAccessor.setHeartbeat(hb[0], hb[1]);
+            } else {
+                newAccessor.setHeartbeat(0, 0);
+            }
+
             return MessageBuilder.createMessage(message.getPayload(), newAccessor.getMessageHeaders());
         }
 
@@ -65,8 +75,17 @@ public class WSMessageInterceptor implements ChannelInterceptor {
 
     private void registerWSNode(StompHeaderAccessor accessor) {
 
-        wsNodes.registerNode(accessor.getSessionId(), getNodeId(accessor),
-                getHeaderValues(accessor, "node_tags"), getHeaderValues(accessor, "driver_names"));
+        String sessionId = accessor.getSessionId();
+        String nodeId = getHeaderValue(accessor, "node_id");
+        String nodeName = getHeaderValue(accessor, "node_name");
+        String nodeVersion = getHeaderValue(accessor, "node_version");
+        String nodeDescription = getHeaderValue(accessor, "node_description");
+        Set<String> tags = getHeaderValues(accessor, "node_tags");
+        Set<String> driverNames = getHeaderValues(accessor, "driver_names");
+
+        Node node = new Node(nodeId, nodeName, nodeVersion, nodeDescription, tags, driverNames);
+
+        wsNodes.registerNode(sessionId, node);
 
         log.info("Нода подключена: {}. Активных соединений: {}", accessor.getSessionId(), wsNodes.numberOfConnectedNodes());
     }
@@ -93,7 +112,7 @@ public class WSMessageInterceptor implements ChannelInterceptor {
     }
 
 
-    private void closeCurrentWSSession(StompHeaderAccessor accessor, Exception e){
+    private void closeCurrentWSSession(StompHeaderAccessor accessor, Exception e) {
         try {
             wsSessions.getSession(accessor.getSessionId())
                     .close(CloseStatus.SERVER_ERROR.withReason("Session closed by server: " + e.getMessage()));
@@ -104,12 +123,12 @@ public class WSMessageInterceptor implements ChannelInterceptor {
 
     //------------------------------------------------------------------------------------------------------------------
 
-    private String getNodeId(StompHeaderAccessor accessor) {
+    private String getHeaderValue(StompHeaderAccessor accessor, String headerName) {
         try {
-            List<?> nodeIds = (List) ((MultiValueMap) accessor.getHeader("nativeHeaders"))
-                    .get("node_id");
+            List<?> values = (List) ((MultiValueMap) accessor.getHeader("nativeHeaders"))
+                    .get(headerName);
 
-            return (String) nodeIds.get(0);
+            return (String) values.get(0);
 
         } catch (Exception e) {
             throw new IncorrectNodeIdException();
